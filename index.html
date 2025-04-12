@@ -1,18 +1,19 @@
 <!DOCTYPE html>
-<html>
+<html style="display: block; height: 100%;">
 <head>
   <meta charset="UTF-8">
-  <title>Live MLB Games</title>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <title>Baseball</title>
   <style>
     body {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
+      display: block;
       margin: 0;
       padding: 0;
       background-image: url("https://i.imgur.com/nOvnQP3.png");
-      background-size: contain;
+      background-size: cover;
+      font-family: sans-serif;
     }
+
     .grid-container {
       display: grid;
       width: 100%;
@@ -20,6 +21,7 @@
       box-sizing: border-box;
       justify-content: center;
     }
+
     .iframe-container {
       position: relative;
       height: 100%;
@@ -27,12 +29,14 @@
       aspect-ratio: 16 / 9;
       transition: all 0.3s ease;
     }
+
     iframe {
       width: 100%;
       height: 100%;
       border-radius: 0px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
+
     .feature-btn {
       position: absolute;
       top: 4px;
@@ -47,21 +51,329 @@
       opacity: 0;
       transition: opacity 0.2s;
     }
+
     .iframe-container:hover .feature-btn {
       opacity: 1;
     }
+
     .iframe-container.featured {
       grid-column: span 2;
       grid-row: span 2;
       z-index: 1;
     }
+
+    /* Password overlay */
+    .password-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    .password-box {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.4);
+      text-align: center;
+      max-width: 1200px;
+      width: 100%;
+    }
+
+    .password-box input[type="password"] {
+      padding: 0.5rem;
+      width: 100%;
+      margin-top: 1rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    .password-box button {
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      background: black;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    /* Wrapper for iframes to toggle visibility later */
+    .iframe-wrapper {
+      width: 100%;
+    }
+
+/* Styling for the uBlock instructions wrapper */
+.ublock-instructions-wrapper {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+  width: 100%;
+}
+
+.ublock-instructions {
+  width: 48%; /* 50% minus some spacing */
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.ublock-code {
+  width: 48%; /* 50% minus some spacing */
+  font-family: monospace;
+  background-color: #f0f0f0;
+  border-radius: 5px;
+  padding: 10px;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+button#copyFilterCode {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+button#copyFilterCode:hover {
+  background-color: #0056b3;
+}
+
+/* Password overlay styling (no changes) */
+.password-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.password-box {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+  text-align: center;
+  max-width: 1200px;
+  width: 100%;
+}
+
+.password-box input[type="password"] {
+  padding: 0.5rem;
+  width: 100%;
+  margin-top: 1rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.password-box button {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  background: black;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.password-notice {
+  font-size: 14px;
+  color: grey;
+  font-style: italic;
+  margin-top: 8px;
+}
+
+#submitPassword {
+    font-size: 24px;
+}
+
+#filterCode {
+    height: 100px;
+    overflow-y: scroll;
+    margin: 0;
+    padding: 0;
+}
+
+#gridControls {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 10px 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  display: flex;
+  gap: 20px;
+  z-index: 1000;
+  opacity: 0; /* Initially hidden */
+  pointer-events: none; /* Prevent clicks when hidden */
+  transition: opacity 0.3s ease, transform 0.3s ease; /* Smooth transition */
+}
+
+#gridControls.visible {
+  opacity: 1; /* Make it visible */
+  pointer-events: auto; /* Allow clicks when visible */
+}
+
+#gridContainer {
+  position: relative;
+  height: 100%; /* Adjust based on your grid's size */
+}
+
+/* Optional: Add a fade-in effect for the controls */
+#gridControls.visible {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Bottom area that covers 15% of the screen height */
+#bottomArea {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 15%;
+  z-index: 999; /* So it's above other content */
+  background-color: transparent; /* Make it invisible */
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: bold;
+}
+
+.control-group button {
+  background: black;
+  color: white;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.control-group button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* For the iframe grid */
+.grid-container {
+  display: grid;
+  width: 100%;
+  box-sizing: border-box;
+  justify-content: center;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0px; /* Space between items */
+  background: black;
+}
+
+@media (max-width: 600px) {
+  .grid-container {
+    grid-template-columns: repeat(1, 1fr); /* 1 column on small screens */
+  }
+}
+
+@media (min-width: 601px) and (max-width: 900px) {
+  .grid-container {
+    grid-template-columns: repeat(2, 1fr); /* 2 columns on medium screens */
+  }
+}
+
+@media (min-width: 901px) {
+  .grid-container {
+    grid-template-columns: repeat(4, 1fr); /* 4 columns on large screens */
+  }
+}
+
+
   </style>
 </head>
 <body>
-  <div style="display: flex; flex-wrap: wrap; width: 100%;">
+
+    <div class="password-overlay" id="passwordOverlay">
+        <div class="password-box">
+          <h2>Enter Password</h2>
+          <input autofocus type="password" id="passwordInput" placeholder="Password">
+          <button id="submitPassword">Submit</button>
+          <p class="password-notice">Yeah I don't actually own any of the things loaded on this website, proceed at your own risk. I am not responsible for what is shown here etc. Don't be surprised if you see adult ads, they are crypto mining, etc. I really tried to make them not do that but they are very annoying. Also if you are on mobile, this site sucks your battery, probably because they are crypto mining lol. To best protect yourself, please follow the instructions below on how to install uBlock Origin (the goat adblocker).</p>
+      
+          <div class="ublock-instructions-wrapper">
+            <div class="ublock-instructions">
+              <h3>uBlock Origin Instructions</h3>
+              <ol>
+                <li><a href="https://ublockorigin.com/" target="_blank">Download uBlock Origin</a></li>
+                <li>To enable custom filters in uBlock Origin, follow these steps:
+                  <ol>
+                    <li>Click on the uBlock Origin icon in your browser toolbar.</li>
+                    <li>Click the gear icon to open the settings.</li>
+                    <li>Go to the "My filters" tab.</li>
+                    <li>Paste your custom filter code (below) into the box.</li>
+                    <li>Click "Apply changes".</li>
+                  </ol>
+                </li>
+                <li>Copy and paste this code into the "My filters" section:</li>
+              </ol>
+            </div>
+      
+            <div class="ublock-code">
+<button id="copyFilterCode" onclick="copyFilterCode()">Copy Filters</button>
+              <pre id="filterCode" class="copy-code">enter the correct password for this to appear</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+  <!-- Grid of iframes -->
+  <div class="iframe-wrapper" id="iframeWrapper">
     <div class="grid-container" id="iframeGrid"></div>
   </div>
 
-  <script src="main.js"></script>
+  <div 
+  id="controlsWrapper"
+  onmouseenter="showControls()" 
+  onmouseleave="hideControls()"
+  style="position: fixed; top: 0; left: 0; width: 100%; height: 15vh; z-index: 999;"
+>
+  <!-- Actual invisible hover trigger area -->
+  <div style="position: absolute; top: 0; left: 0; width: 100%; height: 15vh;"></div>
+
+  <!-- Your controls (now inside wrapper) -->
+  <div id="gridControls">
+    <div class="control-group">
+      <span>Columns:</span>
+      <button onclick="adjustColumns(-1)">-</button>
+      <span id="colCount"></span>
+      <button onclick="adjustColumns(1)">+</button>
+    </div>
+  </div>
+</div>
+  <script src="main.js" defer></script>
 </body>
 </html>
