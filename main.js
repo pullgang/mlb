@@ -100,28 +100,11 @@ const teamMap = {
   // Reinitialize grid with default values
   async function renderIframes(decryptedURL) {
     const liveGames = await getLiveGames();
-    if(!currentColumns) {
-        const numLiveGames = liveGames.length;
-  if (numLiveGames === 1) {
-    currentColumns = 1; // 1 column for 1 game
-  } else if (numLiveGames <= 4) {
-    currentColumns = 2; // 2 columns for 2-4 games
-  } else if (numLiveGames <= 9) {
-    currentColumns = 3; // 3 columns for 5-9 games
-  } else {
-    currentColumns = 4; // 4 columns for 10+ games
-  }
-    }
-    const links = Object.entries(teamMap)
+    
+    let links = Object.entries(teamMap)
       .filter(([, team]) => liveGames.includes(team))
       .map(([num]) => `${decryptedURL}${num}`);
   
-    const grid = document.getElementById("iframeGrid");
-    const num = links.length;
-  
-    // Update the number of columns dynamically
-    const columns = Math.min(currentColumns, num);
-    grid.style.gridTemplateColumns = `repeat(${columns}, minmax(0, 1fr))`;
   
     links.forEach((url, i) => {
       const container = document.createElement("div");
@@ -140,7 +123,53 @@ const teamMap = {
           }
         });
       };
+
+      let someIsFeatured = document.querySelectorAll(".featured").length > 0;
+
+      if(!currentColumns) {
+        const numLiveGames = liveGames.length;
+  if (numLiveGames === 1) {
+    currentColumns = 1; // 1 column for 1 game
+  } else if (numLiveGames <= 4) {
+    currentColumns = someIsFeatured ? 3 : 2; // 2 columns for 2-4 games
+  } else if (numLiveGames <= 9) {
+    currentColumns = numLiveGames > 6 && someIsFeatured ? 4 : 3; // 3 columns for 5-9 games
+  } else {
+    currentColumns = 4; // 4 columns for 10+ games
+  }
+    }
+
+        // Update the number of columns dynamically
+        const grid = document.getElementById("iframeGrid");
+        const columns = Math.min(currentColumns, links.length);
+        grid.style.gridTemplateColumns = `repeat(${columns}, minmax(0, 1fr))`;
+    setTimeout(() => {
+
+        let featureButtons = document.querySelectorAll(".feature-btn");
+  featureButtons.addEventListener("click", () => {
+    let someIsFeatured = document.querySelectorAll(".featured").length > 0;
   
+    if (!currentColumns) {
+      const numLiveGames = liveGames.length;
+      if (numLiveGames === 1) {
+        currentColumns = 1; // 1 column for 1 game
+      } else if (numLiveGames <= 4) {
+        currentColumns = someIsFeatured ? 3 : 2; // 2 columns for 2-4 games
+      } else if (numLiveGames <= 9) {
+        currentColumns = numLiveGames > 6 && someIsFeatured ? 4 : 3; // 3 columns for 5-9 games
+      } else {
+        currentColumns = 4; // 4 columns for 10+ games
+      }
+    }
+  
+    // Update the number of columns dynamically
+    const grid = document.getElementById("iframeGrid");
+    const columns = Math.min(currentColumns, links.length);
+    grid.style.gridTemplateColumns = `repeat(${columns}, minmax(0, 1fr))`;
+  });
+  
+    }, 5000)
+
       const iframe = document.createElement("iframe");
       iframe.src = url;
       iframe.frameBorder = 0;
